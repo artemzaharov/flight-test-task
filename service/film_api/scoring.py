@@ -24,6 +24,7 @@ def compute_score_for_all_channels():
     channels_score_map = {}
     [compute_score_for_channel_rec(root, channels_score_map) for root in forest.channels]
     score_with_names = [(key, Channel.objects.get(id=key).name, channels_score_map[key]) for key in channels_score_map]
+    score_with_names  = sorted(score_with_names, key=lambda x: x[2], reverse=True)
     return score_with_names
 
 def get_score_report():
