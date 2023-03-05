@@ -4,6 +4,8 @@ from django.db import IntegrityError
 from film_api.serializers import *
 import json
 from film_api.tools import *
+from film_api.scoring import *
+
 
 class ConstraintsTests(TestCase):
     def test_no_reversing_rel_in_channel(self):
@@ -124,7 +126,7 @@ class SerializersTest(TestCase):
         contentRel.contentFK = content
         contentRel.parentFK = subchannel
         contentRel.save()
-        true_data = '''{"id": 6, "name": "channel name", "childs": [{"id": 7, "name": "subchannel name", "childs": [{"id": 1, "name": "content name", "metadata": "{}", "score": 123}]}]}'''
+        true_data = '''{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123}]}]}'''%(channel.id, subchannel.id, content.id)
                 
         #act
         serializer = ChannelInTreeSerialier(channel)
@@ -156,7 +158,7 @@ class SerializersTest(TestCase):
         contentRel.parentFK = subchannel
         contentRel.save()
         forest = get_channel_forest()
-        true_data = '''{"channels": [{"id": 8, "name": "channel name", "childs": [{"id": 9, "name": "subchannel name", "childs": [{"id": 3, "name": "content name", "metadata": "{}", "score": 123}]}]}]}'''
+        true_data = '''{"channels": [{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123}]}]}]}'''%(channel.id, subchannel.id, content.id)
 
         #act
         data = ForestSerializer(forest).data
@@ -165,3 +167,94 @@ class SerializersTest(TestCase):
         
         self.assertIsNotNone(data)
         self.assertEqual(true_data, json.dumps(data))
+
+class ScoringTests(TestCase):
+
+    def test_simple_case(self):
+        #arrange 
+        true_score = 123.0
+        content = Content(name="test", score=true_score)
+        content.save()
+        channel = Channel(name="test channel")
+        channel.save()
+        rel = ContentRel(contentFK=content, parentFK=channel)
+        rel.save()
+        
+        #act
+        score = compute_score_for_channel(channel)
+
+        #assert
+        self.assertEqual(true_score, score)
+
+    def test_mean_compute_rights(self):
+        #arrange 
+        true_score = 2
+        content = Content(name="test", score=1)
+        content.save()
+        content2 = Content(name="test2", score=2)
+        content2.save()
+        content3 = Content(name="test3", score=3)
+        content3.save()
+        channel = Channel(name="test channel")
+        channel.save()
+        rel = ContentRel(contentFK=content, parentFK=channel)
+        rel.save()
+        rel2 = ContentRel(contentFK=content2, parentFK=channel)
+        rel2.save()
+        rel3 = ContentRel(contentFK=content3, parentFK=channel)
+        rel3.save()
+
+        #act
+        score = compute_score_for_channel(channel)
+
+        #assert
+        self.assertEqual(true_score, score)
+
+    def test_recursive_compute_rights(self):
+        #arrange 
+        true_score = 11
+        content = Content(name="test", score=1)
+        content.save()
+        content2 = Content(name="test2", score=2)
+        content2.save()
+        content3 = Content(name="test3", score=3)
+        content3.save()
+        content4 = Content(name="test", score=10)
+        content4.save()
+        content5 = Content(name="test2", score=20)
+        content5.save()
+        content6 = Content(name="test3", score=30)
+        content6.save()
+        channel = Channel(name="test channel1")
+        channel.save()
+        channel2 = Channel(name="test channel2")
+        channel2.save()
+        channel3 = Channel(name="test channel root")
+        channel3.save()
+
+        rel = ContentRel(contentFK=content, parentFK=channel)
+        rel.save()
+        rel2 = ContentRel(contentFK=content2, parentFK=channel)
+        rel2.save()
+        rel3 = ContentRel(contentFK=content3, parentFK=channel)
+        rel3.save()
+
+        rel4 = ContentRel(contentFK=content4, parentFK=channel2)
+        rel4.save()
+        rel5 = ContentRel(contentFK=content5, parentFK=channel2)
+        rel5.save()
+        rel6 = ContentRel(contentFK=content6, parentFK=channel2)
+        rel6.save()
+
+        rel7 = ParentChannelRel(channelFK=channel, parentFK=channel3)
+        rel7.save()
+        rel8 = ParentChannelRel(channelFK=channel2, parentFK=channel3)
+        rel8.save()
+
+        #act
+        score = compute_score_for_channel(channel3)
+
+        #assert
+        self.assertEqual(true_score, score)
+
+    
