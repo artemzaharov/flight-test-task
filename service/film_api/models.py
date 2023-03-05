@@ -48,6 +48,7 @@ class Channel(models.Model):
     #         ),
     #     ]
     name = models.CharField(max_length=200)
+    parents_count = models.IntegerField(default=0)
 
 
 class ParentChannelRel(models.Model):
@@ -87,6 +88,13 @@ def content_rel_post_save(sender, instance, *args, **kwargs):
     content.parents_count = ContentRel.objects.filter(contentFK=content).count()
     content.save()
 
+@receiver(post_save, sender=ParentChannelRel)
+def content_rel_post_save(sender, instance, *args, **kwargs):
+    channel = instance.channelFK
+    channel.parents_count = ParentChannelRel.objects.filter(channelFK=channel).count()
+    channel.save()
+
+
 @receiver(pre_save)
-def channel_parent_rel_pre_save(sender, instance, *args, **kwargs):
+def all_pre_save(sender, instance, *args, **kwargs):
     instance.full_clean()
