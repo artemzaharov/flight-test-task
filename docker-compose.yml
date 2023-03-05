@@ -4,24 +4,24 @@ networks:
   application:
 
 services:
-  # server:
-  #   depends_on:
-  #     - db
-  #   container_name: server
-  #   build:
-  #     context: ./
-  #     dockerfile:  ./build/Dockerfile
-  #   environment:
-  #     POSTGRES_PASSWORD: very_difficult_postgress_password
-  #     POSTGRES_USER: service_user
-  #     POSTGRES_DB:  service_db
-  #     POSTGRES_HOST: postgresdb
-  #     POSTGRES_PORT: 5432
-  #   ports:
-  #     - "80:80"
-  #   command: "gunicorn   --bind 0.0.0.0:80 service.wsgi"
-  #   networks:
-  #         - application
+  server:
+    depends_on:
+      - db
+    container_name: server
+    build:
+      context: ./
+      dockerfile:  ./build/Dockerfile
+    environment:
+      POSTGRES_PASSWORD: very_difficult_postgress_password
+      POSTGRES_USER: service_user
+      POSTGRES_DB:  service_db
+      POSTGRES_HOST: postgresdb
+      POSTGRES_PORT: 5432
+    ports:
+      - "80:80"
+    command: "gunicorn   --bind 0.0.0.0:80 service.asgi"
+    networks:
+          - application
 
   db:
     image: postgres
