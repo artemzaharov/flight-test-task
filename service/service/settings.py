@@ -87,7 +87,7 @@ DATABASES = {
     }
 }
 
-
+TEST_DATABASE_PREFIX = "TEST_"
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
