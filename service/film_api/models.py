@@ -1,13 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Deferrable, Func, F
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.contrib.postgres.constraints import ExclusionConstraint
 from django.core.exceptions import ValidationError
-from django.contrib.postgres.fields import (
-    RangeOperators,
-)
 
 
 class Content(models.Model):
@@ -58,16 +53,17 @@ class ParentChannelRel(models.Model):
                 fields=["channelFK", "parentFK"], name="unique_channel_rel"
             ),
         ]
+
+    channelFK = models.ForeignKey(Channel, models.CASCADE, related_name="channel_parents")
+    parentFK = models.ForeignKey(
+        Channel, models.CASCADE, related_name="channel_subchannels")
+    
+
     def clean(self) -> None:
         if self.channelFK.id == self.parentFK.id:
             raise ValidationError(_('Reversing rel is prohibited'))
         if ParentChannelRel.objects.filter(channelFK=self.parentFK, parentFK=self.channelFK).count() > 0:
             raise ValidationError(_('Cycling rel is prohibited'))
-
-
-    channelFK = models.ForeignKey(Channel, models.CASCADE, related_name="channel_parents")
-    parentFK = models.ForeignKey(
-        Channel, models.CASCADE, related_name="channel_subchannels")
 
 class ContentRel(models.Model):
     class Meta:
