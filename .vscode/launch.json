@@ -27,7 +27,7 @@
             "name": "Python: Django Migrate",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/app/manage.py",
+            "program": "${workspaceFolder}/service/manage.py",
             "args": [
                 "migrate",
 
@@ -46,9 +46,10 @@
             "name": "Python: Django Make Migrations",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/app/manage.py",
+            "program": "${workspaceFolder}/service/manage.py",
             "args": [
                 "makemigrations",
+                "film_api"
             ],
             "django": true,
             "justMyCode": true,
@@ -65,7 +66,7 @@
             "name": "Python: Django Run Tests",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/app/manage.py",
+            "program": "${workspaceFolder}/service/manage.py",
             "args": [
                 "test",
             ],
@@ -84,7 +85,7 @@
             "name": "Python: Django Clear Database",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/app/manage.py",
+            "program": "${workspaceFolder}/service/manage.py",
             "args": [
                 "flush"
             ],
@@ -103,7 +104,7 @@
             "name": "Python: Django Shell",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/app/manage.py",
+            "program": "${workspaceFolder}/service/manage.py",
             "args": [
                 "shell",
 
@@ -122,7 +123,7 @@
             "name": "Python: Django Create Superuser",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/app/manage.py",
+            "program": "${workspaceFolder}/service/manage.py",
             "args": [
                 "createsuperuser",
 
