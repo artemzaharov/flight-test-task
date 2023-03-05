@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 class Content(models.Model):
     score = models.IntegerField(default=0)
     name = models.CharField(max_length=200)
-    metadata = models.JSONField(null=True, default=None)
+    metadata = models.JSONField(null=True, default=None, blank=True)
     parents_count = models.IntegerField(default=0)
 
 
