@@ -9,5 +9,6 @@ urlpatterns = [
         'get': 'retrieve',
         })
     ),
+    path('api/content/file/<int:pk>', ContentFileDownload.as_view()),
 
 ]

@@ -2,7 +2,8 @@ from rest_framework import serializers
 from film_api import models as m
 from django.db import IntegrityError
 from film_api.tools import *
-
+from service.settings import MEDIA_ROOT
+import os.path as p
 
 # # рекурсивное поле, глубины 1. Позволяет сослаться в сериализаторе на самого себя, но без дальнейшей рекурсии
 # class RecursiveField(serializers.Serializer):
@@ -11,16 +12,27 @@ from film_api.tools import *
 #         return serializer.data
 
 class ContentFileSerializer(serializers.ModelSerializer):
+    path = serializers.SerializerMethodField("get_file_path")
     class Meta:
         model = m.ContentFile
-        fields = ['id', 'file', 'fileType']
+        fields = ['id', 'path', 'fileType']
+
+    def get_file_path(self, instance):
+        file_path = p.basename(instance.file.path)
+        return file_path
 
 class ContentSerializer(serializers.ModelSerializer):
-    file = ContentFileSerializer(required=False)
-
+    file = serializers.SerializerMethodField("get_file")
+    
     class Meta:
         model = m.Content
         fields = ['id', 'name', 'metadata', 'score', 'file']
+    
+    def get_file(self, instance):
+        if instance.file.values().count() > 0:
+            return ContentFileSerializer(instance=instance.file.get_queryset()[0]).data
+        return None
+
 
 class OneChannelSerializer(serializers.ModelSerializer):
     class Meta:

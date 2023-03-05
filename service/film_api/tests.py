@@ -5,6 +5,8 @@ from film_api.serializers import *
 import json
 from film_api.tools import *
 from film_api.scoring import *
+import io
+from django.core.files import File
 
 
 class ConstraintsTests(TestCase):
@@ -105,6 +107,27 @@ class SerializersTest(TestCase):
         #assert
         self.assertIsNotNone(data)
     
+    def test_content_serializer_with_file_works(self):
+        #arragne 
+        content = Content()
+        content.name = "name"
+        content.score = 123
+        content.metadata = "{}"
+        content.save()
+        content_file = ContentFile()
+        content_file.contentFK = content
+        content_file.file = File(io.StringIO("Some text"), "test file")
+        content_file.fileType = ContentFile.FileType.TEXT
+        content_file.save()
+        # contentFile = ContentFile()
+
+        #act
+        serializer = ContentSerializer(content)
+        data = serializer.data
+
+        #assert
+        self.assertIsNotNone(data)
+    
     def test_channel_serialier_works(self):
         #arrange
         content = Content()
@@ -126,7 +149,7 @@ class SerializersTest(TestCase):
         contentRel.contentFK = content
         contentRel.parentFK = subchannel
         contentRel.save()
-        true_data = '''{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123}]}]}'''%(channel.id, subchannel.id, content.id)
+        true_data = '''{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123, "file": null}]}]}'''%(channel.id, subchannel.id, content.id)
                 
         #act
         serializer = ChannelInTreeSerialier(channel)
@@ -158,7 +181,7 @@ class SerializersTest(TestCase):
         contentRel.parentFK = subchannel
         contentRel.save()
         forest = get_channel_forest()
-        true_data = '''{"channels": [{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123}]}]}]}'''%(channel.id, subchannel.id, content.id)
+        true_data = '''{"channels": [{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123, "file": null}]}]}]}'''%(channel.id, subchannel.id, content.id)
 
         #act
         data = ForestSerializer(forest).data

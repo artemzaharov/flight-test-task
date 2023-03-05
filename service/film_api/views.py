@@ -5,6 +5,7 @@ from film_api.serializers import *
 from film_api.models import *
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from django.http import FileResponse
 
 # Create your views here.
 class ChannelView(GenericAPIView):
@@ -28,3 +29,22 @@ class ContentViewSet(ModelViewSet):
     serializer_class = ContentSerializer
     permission_classes = (permissions.AllowAny,)
 
+class ContentFileDownload(GenericAPIView):
+    permission_classes = (permissions.AllowAny,) 
+    
+    def get(self, request, *args, **kwargs):
+        if 'pk' in kwargs:
+            pk = kwargs['pk']
+            contentFile = ContentFile.objects.filter(id=pk)
+            if len(contentFile) == 0:
+                return Response(status=404)
+            contentFile = contentFile[0]
+            resp =  FileResponse(contentFile.file.file)
+            if contentFile.fileType ==  ContentFile.FileType.TEXT:
+                resp['Content-Type'] = 'text/plain'
+            elif contentFile.fileType ==  ContentFile.FileType.PDF:
+                resp['Content-Type'] = 'application/pdf'
+            else:
+                resp['Content-Type'] = 'video/x-ms-wmv'
+            return resp
+        return Response(status=400, data="No pk given")

@@ -13,15 +13,15 @@ class Content(models.Model):
 
 
 class ContentFile(models.Model):
-    class FieldType(models.TextChoices):
+    class FileType(models.TextChoices):
         VIDEO = "VI", _('Video file')
         PDF = "PF", _("PDF file")
         TEXT = "TX", _("Text file")
 
     file = models.FileField()
     fileType = models.CharField(
-        choices=FieldType.choices, default=FieldType.VIDEO, max_length=2)
-    contentFK = models.ForeignKey(Content, on_delete=models.CASCADE)
+        choices=FileType.choices, default=FileType.VIDEO, max_length=2)
+    contentFK = models.ForeignKey(Content, on_delete=models.CASCADE, related_name="file")
 
 
 class Channel(models.Model):
@@ -74,6 +74,6 @@ def content_rel_post_save(sender, instance, *args, **kwargs):
     channel.save()
 
 
-@receiver(pre_save)
+@receiver(pre_save, sender=ParentChannelRel)
 def all_pre_save(sender, instance, *args, **kwargs):
     instance.full_clean()
