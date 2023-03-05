@@ -5,8 +5,10 @@ networks:
 
 services:
   server:
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     container_name: server
     build:
       context: ./
@@ -19,7 +21,7 @@ services:
       POSTGRES_PORT: 5432
     ports:
       - "80:80"
-    command: "gunicorn   --bind 0.0.0.0:80 service.asgi"
+    command: "gunicorn   --bind 0.0.0.0:80 service.wsgi"
     networks:
           - application
 
@@ -30,6 +32,12 @@ services:
       POSTGRES_PASSWORD: very_difficult_postgress_password
       POSTGRES_USER: service_user
       POSTGRES_DB: service_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U service_user -d service_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     volumes:
       - ./. Init Database:/docker-entrypoint-initdb.d
       - ./dbdata:/var/lib/postgresql/data
@@ -50,4 +58,6 @@ services:
     restart: unless-stopped
     ports:
       - 8080:8080
+    networks:
+          - application
     
