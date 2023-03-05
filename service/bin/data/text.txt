@@ -1,0 +1,25 @@
+GiST is an abbreviation of «generalized search tree». This is a balanced search tree, just like «b-tree» discussed earlier.
+
+What is the difference? «btree» index is strictly connected to the comparison semantics: support of «greater», «less», and «equal» operators is all it is capable of (but very capable!) However, modern databases store data types for which these operators just make no sense: geodata, text documents, images,…
+
+GiST index method comes to our aid for these data types. It permits defining a rule to distribute data of an arbitrary type across a balanced tree and a method to use this representation for access by some operator. For example, GiST index can «accommodate» R-tree for spatial data with support of relative position operators (located on the left, on the right, contains, etc.) or RD-tree for sets with support of intersection or inclusion operators.
+
+Thanks to extensibility, a totally new method can be created from scratch in PostgreSQL: to this end, an interface with the indexing engine must be implemented. But this requires premeditation of not only the indexing logic, but also mapping data structures to pages, efficient implementation of locks, and support of a write-ahead log. All this assumes high developer skills and a large human effort. GiST simplifies the task by taking over low-level problems and offering its own interface: several functions pertaining not to techniques, but to the application domain. In this sense, we can regard GiST as a framework for building new access methods.
+
+Structure
+
+GiST is a height-balanced tree that consists of node pages. The nodes consist of index rows.
+
+Each row of a leaf node (leaf row), in general, contains some predicate (boolean expression) and a reference to a table row (TID). Indexed data (key) must meet this predicate.
+
+Each row of an internal node (internal row) also contains a predicate and a reference to a child node, and all indexed data of the child subtree must meet this predicate. In other words, the predicate of an internal row comprises the predicates of all child rows. This important trait of GiST index replaces simple ordering of B-tree.
+
+Search in GiST tree uses a specialized consistency function («consistent») — one of the functions defined by the interface and implemented in its own way for each supported operator family.
+
+The consistency function is called for an index row and determines whether the predicate of this row is consistent with the search predicate (specified as "indexed-field operator expression"). For an internal row, this function actually determines whether it is needed to descend to the corresponding subtree, and for a leaf row, the function determines whether the indexed data meets the predicate.
+
+The search starts with a root node, as a normal tree search. The consistency function permits to find out which child nodes it makes sense to enter (there may be several of them) and which it does not. The algorithm is then repeated for each child node found. And if the node is leaf, the row selected by the consistency function is returned as one of the results.
+
+The search is depth-first: the algorithm first tries to reach a leaf node. This permits to return first results soon whenever possible (which might be important if the user is interested in only several results rather than all of them).
+
+Let's once again note that the consistency function does not need to have anything to do with «greater», «less», or «equal» operato
