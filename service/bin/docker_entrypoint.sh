@@ -7,5 +7,5 @@ python /var/app/manage.py makemigrations
 python /var/app/manage.py migrate
 
 # код для тестов
-# python3 /app/manage.py test excelMaster
+python /var/app/manage.py test film_api
 exec $@
