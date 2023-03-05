@@ -1,12 +1,20 @@
 import os
+from os import path as p
 from random import randint
 import django
 import random
 os.environ['DJANGO_SETTINGS_MODULE'] = 'service.settings'
 django.setup()
 from film_api.models  import *
+from django.core.files import File
+import io
 
-
+test_files_dir = "bin/data"
+test_files = [
+    (ContentFile.FileType.TEXT, p.join(test_files_dir, "text.txt")),
+    (ContentFile.FileType.PDF, p.join(test_files_dir, "pdf.pdf")),
+    (ContentFile.FileType.VIDEO, p.join(test_files_dir, "video.mkv")),
+]
 
 def set1():
     for i in range(3):
@@ -61,14 +69,21 @@ def set2():
             subchannelRel.save()
             for k in range(2):
                 content = Content()
-            content.name = random_element(tv_shows+films)
-            content.metadata = "{}"
-            content.score = randint(0, 10)
-            content.save()
-            contentRel = ContentRel()
-            contentRel.contentFK = content
-            contentRel.parentFK = subchannel
-            contentRel.save()
+                content.name = random_element(tv_shows+films)
+                content.metadata = "{}"
+                content.score = randint(0, 10)
+                content.save()
+                test_file = random_element(test_files)
+                contentFile = ContentFile()
+                contentFile.fileType = test_file[0]
+                with open(test_file[1], 'rb') as f:
+                    contentFile.file = File(io.BytesIO(f.read()), test_file[1])
+                contentFile.contentFK = content
+                contentFile.save()
+                contentRel = ContentRel()
+                contentRel.contentFK = content
+                contentRel.parentFK = subchannel
+                contentRel.save()
 # set1()
 
 set2()
