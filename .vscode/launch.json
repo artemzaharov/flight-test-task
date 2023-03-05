@@ -22,6 +22,25 @@
                 "POSTGRES_PORT":"5432"
               }
         },
+        {
+            "name": "Python: dump",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/service/manage.py",
+            "args": [
+                "dumpdata","--exclude=auth","--exclude=contenttypes",
+
+            ],
+            "django": true,
+            "justMyCode": true,
+            "env": {
+                "POSTGRES_PASSWORD": "very_difficult_postgress_password",
+                "POSTGRES_USER": "service_user",
+                "POSTGRES_DB": "service_db",
+                "POSTGRES_HOST":"127.0.0.1",
+                "POSTGRES_PORT":"5432"
+              }
+        },
 
         {
             "name": "Python: Django Migrate",
@@ -69,6 +88,7 @@
             "program": "${workspaceFolder}/service/manage.py",
             "args": [
                 "test",
+                "film_api"
             ],
             "django": true,
             "justMyCode": true,
@@ -130,6 +150,21 @@
             ],
             "django": true,
             "justMyCode": true,
+            "env": {
+                "POSTGRES_PASSWORD": "very_difficult_postgress_password",
+                "POSTGRES_USER": "service_user",
+                "POSTGRES_DB": "service_db",
+                "POSTGRES_HOST":"127.0.0.1",
+                "POSTGRES_PORT":"5432"
+              }
+        },
+        {
+            "name": "Python populate db",
+            "type": "python",
+            "request": "launch",
+            "module": "bin.populate_db",
+            "cwd": "${workspaceFolder}/service",
+            "args": ["-f", "populate_db.py"],
             "env": {
                 "POSTGRES_PASSWORD": "very_difficult_postgress_password",
                 "POSTGRES_USER": "service_user",
