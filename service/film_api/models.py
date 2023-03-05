@@ -6,16 +6,6 @@ from django.core.exceptions import ValidationError
 
 
 class Content(models.Model):
-    # class Meta:
-    #     constraints = [
-    #         ExclusionConstraint(
-    #         name="exclude_overlapping_goals",
-    #         expressions=[
-    #            (F("parents_count"), 0, RangeOperators.NOT_EQUAL),
-    #            ("Content",  RangeOperators.EQUAL)
-    #         ],
-    #     ),
-    #     ]
     score = models.IntegerField(default=0)
     name = models.CharField(max_length=200)
     metadata = models.JSONField(null=True, default=None)
@@ -35,13 +25,6 @@ class ContentFile(models.Model):
 
 
 class Channel(models.Model):
-    # class Meta:
-    #     constraints = [
-    #         models.CheckConstraint(
-    #             name="at_least_one_child_constraint",
-    #             check=models.Q(Length(models.F('content_channels'))),
-    #         ),
-    #     ]
     name = models.CharField(max_length=200)
     parents_count = models.IntegerField(default=0)
 
