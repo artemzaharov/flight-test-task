@@ -41,6 +41,25 @@
                 "POSTGRES_PORT":"5432"
               }
         },
+        {
+            "name": "Python: make report",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/service/manage.py",
+            "args": [
+                "report",  "${workspaceFolder}/reports/report.csv",
+
+            ],
+            "django": true,
+            "justMyCode": true,
+            "env": {
+                "POSTGRES_PASSWORD": "very_difficult_postgress_password",
+                "POSTGRES_USER": "service_user",
+                "POSTGRES_DB": "service_db",
+                "POSTGRES_HOST":"127.0.0.1",
+                "POSTGRES_PORT":"5432"
+              }
+        },
 
         {
             "name": "Python: Django Migrate",
