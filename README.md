@@ -12,10 +12,9 @@ To start project
  docker-compose up
  
 A channel must have at least
-one content or one subchannel. The subchannels of a channel might also have more
-subchannels underneath.
+one content or one subchannel.
 
-seems like a contradiction
+!!!seems like a contradiction
 
 If a channel has no contents, it does not affect the ratings of its parent since its value is
 undefined.
