@@ -1,23 +1,52 @@
-# flight-test-task
-Test task 
+How to Start and Use the Project
+This guide will walk you through the steps to start and use the project on your local machine.
 
-To start project
+Prerequisites
+Before you start, you'll need to make sure you have the following installed:
 
- sh build.sh
- 
- sh run.sh
- 
- or 
- 
- docker-compose build
- 
- docker-compose up
- 
- 
-A channel must have at least
-one content or one subchannel.
+Docker
+Python
+Installation
+Clone the repository to your local machine.
 
-!!!seems like a contradiction
+Navigate to the project directory in your terminal.
 
-If a channel has no contents, it does not affect the ratings of its parent since its value is
-undefined.
+Run the following command to build the project:
+
+
+$ docker-compose build
+Once the build process is complete, run the following command to start the project:
+
+$ docker-compose up
+
+Open new terminal with project
+In project folder create venv
+$ python3 -m venv env
+
+Activate it
+$ source env/bin/activate
+
+Install requirements
+(env)$ pip install -r requirements.txt
+
+Run the following command to populate the database:
+(env)$ python manage.py populate_db
+
+Usage
+
+http://localhost:80/api/channel           - all Tree
+http://localhost:80/api/channel/<int:id>  - channel
+http://localhost:80/api/content/<int:pk>   - content
+
+Use the admininterface to interact with the project and add content and channels.
+(env)$ python manage.py createsuperuser
+
+Run the following command to generate a report:
+
+(env)$ python manage.py report
+
+
+
+
+
+
