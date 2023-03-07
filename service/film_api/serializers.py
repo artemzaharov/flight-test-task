@@ -5,12 +5,6 @@ from film_api.tools import *
 from service.settings import MEDIA_ROOT
 import os.path as p
 
-# # рекурсивное поле, глубины 1. Позволяет сослаться в сериализаторе на самого себя, но без дальнейшей рекурсии
-# class RecursiveField(serializers.Serializer):
-#     def to_representation(self, value):
-#         serializer = self.parent.parent.__class__(value, context=self.context)
-#         return serializer.data
-
 class ContentFileSerializer(serializers.ModelSerializer):
     path = serializers.SerializerMethodField("get_file_path")
     class Meta:

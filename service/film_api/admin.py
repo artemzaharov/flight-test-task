@@ -9,7 +9,7 @@ class ContentAdmin(admin.ModelAdmin):
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "parentChannels":
-            # возвращаем только те каналы, которые не содержат подканалов
+            #  return only those channels that do not contain subchannels
             kwargs["queryset"] = Channel.objects.filter(subchannels_count=0)
         return super(ContentAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
@@ -19,18 +19,18 @@ class ChannelAdmin(admin.ModelAdmin):
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "parentChannels":
-            # получаем все каналы, которые могут быть родительскими, т.е. которые не содержат контент
+            # get all channels that can be parental, i.e. that do not contain content
             channelsWithoutContent = Channel.objects.filter(content_count=0) 
             if 'object_id' in request.resolver_match.kwargs:
                 # получаем  канал, для которого запрашиваем список
                 pk = request.resolver_match.kwargs['object_id']
                 channel = Channel.objects.get(pk=pk)
-                # получаем список всех потомков (тут рекурсия вплоть до листьев)
+                # we get the channel for which we request the list
                 all_descendants = recursive_query_all_descendans_channels(channel)
-                # выбираем id потомков
+                # Select the descendant id
                 all_descendants = [el.id for el in all_descendants]
                 channelsWithoutContent =  channelsWithoutContent.exclude(pk__in=all_descendants)
-            # возрващаем все потенциальные родительские каналы, не являющиеся потомком текущего
+            # We take all potential parent channels that are not a descendant of the current one
             kwargs["queryset"] = channelsWithoutContent
         return super(ChannelAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
     

@@ -15,5 +15,5 @@ class FilmApiConfig(AppConfig):
                 content.metadata={'text':CONTENT_EMPTY_CONTENT_TEXT}
                 content.save()
         except ProgrammingError:
-            # мы находимся в миграции
+            # we are in migration
             pass
