@@ -7,6 +7,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'service.settings'
 django.setup()
 from film_api.models  import *
 from django.core.files import File
+from django.core.files.images import ImageFile
 import io
 
 test_files_dir = "bin/data"
@@ -16,28 +17,8 @@ test_files = [
     (ContentFile.FileType.VIDEO, p.join(test_files_dir, "video.mkv")),
 ]
 
-def set1():
-    for i in range(3):
-        channel = Channel()
-        channel.name = f"test channel {i}"
-        channel.save()
-        for j in range(5):
-            subchannel = Channel()
-            subchannel.name = f"test subchannel {j}"
-            subchannel.save()
-            subchannelRel = ParentChannelRel()
-            subchannelRel.channelFK = subchannel
-            subchannelRel.parentFK = channel
-            subchannelRel.save()
-            for k in range(2):
-                content = Content()
-                content.name = f"test content {k}"
-                content.metadata = "{}"
-                content.save()
-                contentRel = ContentRel()
-                contentRel.contentFK = content
-                contentRel.parentFK = subchannel
-                contentRel.save()
+test_langs = ['ru', 'en', 'cn']
+test_channel_image_path = test_files_dir+ "/test_channel_image.jpg"
 
 def random_element(list):
         return list[randint(0, len(list)-1)]
@@ -54,19 +35,25 @@ def set2():
     films = ["The Godfather", "The Shawshank Redemption", "The Dark Knight", "Forrest Gump", "Pulp Fiction", "The Matrix", "The Silence of the Lambs", "Jurassic Park", "Star Wars", "The Lord of the Rings", "Indiana Jones", "Back to the Future"]
     
 
+    with open(test_channel_image_path, 'rb') as f:
+        channel_image = io.BytesIO(f.read())
+
 
     for i in range(3):
         channel = Channel()
         channel.name = random_element(channels)
+        channel.language = random_element(test_langs)
+        channel.image = ImageFile(channel_image, f"{channel.name}.jpg")
         channel.save()
         for j in range(5):
             subchannel = Channel()
             subchannel.name = random_element(subchannels)
+            subchannel.language = random_element(test_langs)
+            channel_image.seek(0)
+            subchannel.image = ImageFile(channel_image, f"{subchannel.name}.jpg")
             subchannel.save()
-            subchannelRel = ParentChannelRel()
-            subchannelRel.channelFK = subchannel
-            subchannelRel.parentFK = channel
-            subchannelRel.save()
+            subchannel.parentChannels.add(channel)
+            subchannel.save()
             for k in range(2):
                 content = Content()
                 content.name = random_element(tv_shows+films)
@@ -80,10 +67,8 @@ def set2():
                     contentFile.file = File(io.BytesIO(f.read()), test_file[1])
                 contentFile.contentFK = content
                 contentFile.save()
-                contentRel = ContentRel()
-                contentRel.contentFK = content
-                contentRel.parentFK = subchannel
-                contentRel.save()
+                content.parentChannels.add(subchannel)
+                content.save()
 # set1()
 
 set2()

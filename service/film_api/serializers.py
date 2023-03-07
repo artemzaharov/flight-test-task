@@ -37,7 +37,7 @@ class ContentSerializer(serializers.ModelSerializer):
 class OneChannelSerializer(serializers.ModelSerializer):
     class Meta:
         model  = m.Channel
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'language', 'image']
 
 
 class ChannelInTreeSerialier(serializers.ModelSerializer):
@@ -45,7 +45,7 @@ class ChannelInTreeSerialier(serializers.ModelSerializer):
  
     class Meta:
         model = m.Channel
-        fields = ['id', 'name', 'childs']
+        fields = ['id', 'name','language', 'image',  'childs']
 
     # def get_childs(self, instance):
     #     stack = channel_to_subchannels(instance)

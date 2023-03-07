@@ -7,22 +7,37 @@ from film_api.tools import *
 from film_api.scoring import *
 import io
 from django.core.files import File
+from django.core.files.images import ImageFile
+from io import StringIO 
 
+def create_empty_content():
+    empty_content = Content(name=CONTENT_EMPTY_CONTENT_NAME)
+    empty_content.metadata={'text':CONTENT_EMPTY_CONTENT_TEXT}
+    empty_content.save()
+
+def fill_channel_fields(channel):
+    file = StringIO("test")
+    channel.language = 'ru'
+    channel.image = ImageFile(file, "test.jpg")
+    pass
 
 class ConstraintsTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        create_empty_content()
+    
     def test_no_reversing_rel_in_channel(self):
         #arrange 
+
         channel = Channel()
         channel.name = "test"
+        fill_channel_fields(channel)
         channel.save()
-
-        channelRel = ParentChannelRel()
-        channelRel.channelFK = channel
-        channelRel.parentFK = channel
 
         #act
         try:
-            channelRel.save()
+            channel.parentChannels.add(channel)
+            channel.save()
             isRaised = False
         except ValidationError:
             isRaised = True
@@ -32,26 +47,50 @@ class ConstraintsTests(TestCase):
         
     def test_no_duplicate_rel_in_channel(self):
         #arrange 
+        file = StringIO("test")
+        channel1 = Channel()
+        channel1.name = "test1"
+        fill_channel_fields(channel1)
+        channel1.save()
+
+        channel2 = Channel()
+        channel2.name = "test2"
+        fill_channel_fields(channel2)
+        channel2.save()
+
+        channel2.parentChannels.add(channel1)
+        channel2.save()
+        
+        channel2.parentChannels.add(channel1)
+        
+        #act
+        channel2.save()
+
+        #assert 
+        self.assertTrue(channel2.parentChannels.count()  == 1)
+    
+    def test_no_cycling_rel_in_channel(self):
+        #arrange 
+        file = StringIO("test")
         channel1 = Channel()
         channel1.name = "test"
+        fill_channel_fields(channel1)
         channel1.save()
 
         channel2 = Channel()
         channel2.name = "test"
+        fill_channel_fields(channel2)
         channel2.save()
 
-        channelRel1 = ParentChannelRel()
-        channelRel1.channelFK = channel1
-        channelRel1.parentFK = channel2
-        channelRel1.save()
+        channel1.parentChannels.add(channel2)
 
-        channelRel2 = ParentChannelRel()
-        channelRel2.channelFK = channel1
-        channelRel2.parentFK = channel2
+        channel1.save()
+        
 
         #act
         try:
-            channelRel2.save()
+            channel2.parentChannels.add(channel1)
+            channel2.save()
             isRaised = False
         except ValidationError:
             isRaised = True
@@ -59,37 +98,59 @@ class ConstraintsTests(TestCase):
         #assert 
         self.assertTrue(isRaised)
     
-    def test_no_cycling_rel_in_channel(self):
+    def test_no_long_cycling_rel_in_channel(self):
         #arrange 
+        file = StringIO("test")
         channel1 = Channel()
         channel1.name = "test"
+        fill_channel_fields(channel1)
         channel1.save()
 
         channel2 = Channel()
         channel2.name = "test"
+        fill_channel_fields(channel2)
         channel2.save()
+        channel3 = Channel()
+        channel3.name = "test"
+        fill_channel_fields(channel3)
+        channel3.save()
 
-        channelRel1 = ParentChannelRel()
-        channelRel1.channelFK = channel1
-        channelRel1.parentFK = channel2
-        channelRel1.save()
-
-        channelRel2 = ParentChannelRel()
-        channelRel2.channelFK = channel2
-        channelRel2.parentFK = channel1
-
+        channel2.parentChannels.add(channel1)
+        channel2.save()
+        channel3.parentChannels.add(channel2)
+        channel3.save()
         #act
         try:
-            channelRel2.save()
+            channel1.parentChannels.add(channel3)
+            channel1.save()
             isRaised = False
         except ValidationError:
             isRaised = True
         
         #assert 
         self.assertTrue(isRaised)
+    
+    def test_content_count_computes_right(self):
+        #act
+        file = StringIO("test")
+        ch = Channel(name='test')
+        fill_channel_fields(ch)
+        ch.save()
+        content = Content(name="content")
+        content.save()
+        content.parentChannels.add(ch)
+        #arrange
+        content.save()
+        ch.refresh_from_db()
+        #assert
+        self.assertEqual(1, ch.content_count)
 
 
 class SerializersTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        create_empty_content()
+    
 
     def test_content_serializer_works(self):
         #arragne 
@@ -130,6 +191,7 @@ class SerializersTest(TestCase):
     
     def test_channel_serialier_works(self):
         #arrange
+        file = StringIO("test")
         content = Content()
         content.name = "content name"
         content.score = 123
@@ -137,19 +199,18 @@ class SerializersTest(TestCase):
         content.save()
         channel = Channel()
         channel.name = "channel name"
+        fill_channel_fields(channel)
+
         channel.save()
         subchannel = Channel()
         subchannel.name = "subchannel name"
+        fill_channel_fields(subchannel)
         subchannel.save()
-        subchannelRel = ParentChannelRel()
-        subchannelRel.channelFK = subchannel
-        subchannelRel.parentFK = channel
-        subchannelRel.save()
-        contentRel = ContentRel()
-        contentRel.contentFK = content
-        contentRel.parentFK = subchannel
-        contentRel.save()
-        true_data = '''{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123, "file": null}]}]}'''%(channel.id, subchannel.id, content.id)
+        subchannel.parentChannels.add(channel)
+        subchannel.save()
+        content.parentChannels.add(subchannel)
+        content.save()
+        true_data = '''{"id": %d, "name": "channel name", "language": "ru", "image": "%s", "childs": [{"id": %d, "name": "subchannel name", "language": "ru", "image": "%s", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123, "file": null}]}]}'''%(channel.id, channel.image.url, subchannel.id,subchannel.image.url, content.id)
                 
         #act
         serializer = ChannelInTreeSerialier(channel)
@@ -168,30 +229,31 @@ class SerializersTest(TestCase):
         content.save()
         channel = Channel()
         channel.name = "channel name"
+        fill_channel_fields(channel)
         channel.save()
         subchannel = Channel()
         subchannel.name = "subchannel name"
+        fill_channel_fields(subchannel)
         subchannel.save()
-        subchannelRel = ParentChannelRel()
-        subchannelRel.channelFK = subchannel
-        subchannelRel.parentFK = channel
-        subchannelRel.save()
-        contentRel = ContentRel()
-        contentRel.contentFK = content
-        contentRel.parentFK = subchannel
-        contentRel.save()
+        subchannel.parentChannels.add(channel)
+        subchannel.save()
+        content.parentChannels.add(subchannel)
+        content.save()
         forest = get_channel_forest()
-        true_data = '''{"channels": [{"id": %d, "name": "channel name", "childs": [{"id": %d, "name": "subchannel name", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123, "file": null}]}]}]}'''%(channel.id, subchannel.id, content.id)
+        true_data = '''{"channels": [{"id": %d, "name": "channel name", "language": "ru", "image": "%s", "childs": [{"id": %d, "name": "subchannel name", "language": "ru", "image": "%s", "childs": [{"id": %d, "name": "content name", "metadata": "{}", "score": 123, "file": null}]}]}]}'''%(channel.id, channel.image.url, subchannel.id, subchannel.image.url, content.id)
 
         #act
         data = ForestSerializer(forest).data
 
         #assert
-        
         self.assertIsNotNone(data)
         self.assertEqual(true_data, json.dumps(data))
 
 class ScoringTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        create_empty_content()
+    
 
     def test_simple_case(self):
         #arrange 
@@ -199,9 +261,10 @@ class ScoringTests(TestCase):
         content = Content(name="test", score=true_score)
         content.save()
         channel = Channel(name="test channel")
+        fill_channel_fields(channel)
         channel.save()
-        rel = ContentRel(contentFK=content, parentFK=channel)
-        rel.save()
+        content.parentChannels.add(channel)
+        content.save()
         
         #act
         score = compute_score_for_channel(channel)
@@ -219,13 +282,14 @@ class ScoringTests(TestCase):
         content3 = Content(name="test3", score=3)
         content3.save()
         channel = Channel(name="test channel")
+        fill_channel_fields(channel)
         channel.save()
-        rel = ContentRel(contentFK=content, parentFK=channel)
-        rel.save()
-        rel2 = ContentRel(contentFK=content2, parentFK=channel)
-        rel2.save()
-        rel3 = ContentRel(contentFK=content3, parentFK=channel)
-        rel3.save()
+        content.parentChannels.add(channel)
+        content.save()
+        content2.parentChannels.add(channel)
+        content2.save()
+        content3.parentChannels.add(channel)
+        content3.save()
 
         #act
         score = compute_score_for_channel(channel)
@@ -249,30 +313,33 @@ class ScoringTests(TestCase):
         content6 = Content(name="test3", score=30)
         content6.save()
         channel = Channel(name="test channel1")
+        fill_channel_fields(channel)
         channel.save()
         channel2 = Channel(name="test channel2")
+        fill_channel_fields(channel2)
         channel2.save()
         channel3 = Channel(name="test channel root")
+        fill_channel_fields(channel3)
         channel3.save()
 
-        rel = ContentRel(contentFK=content, parentFK=channel)
-        rel.save()
-        rel2 = ContentRel(contentFK=content2, parentFK=channel)
-        rel2.save()
-        rel3 = ContentRel(contentFK=content3, parentFK=channel)
-        rel3.save()
+        content.parentChannels.add(channel)
+        content.save()
+        content2.parentChannels.add(channel)
+        content2.save()
+        content3.parentChannels.add(channel)
+        content3.save()
 
-        rel4 = ContentRel(contentFK=content4, parentFK=channel2)
-        rel4.save()
-        rel5 = ContentRel(contentFK=content5, parentFK=channel2)
-        rel5.save()
-        rel6 = ContentRel(contentFK=content6, parentFK=channel2)
-        rel6.save()
+        content4.parentChannels.add(channel2)
+        content4.save()
+        content5.parentChannels.add(channel2)
+        content5.save()
+        content6.parentChannels.add(channel2)
+        content6.save()
 
-        rel7 = ParentChannelRel(channelFK=channel, parentFK=channel3)
-        rel7.save()
-        rel8 = ParentChannelRel(channelFK=channel2, parentFK=channel3)
-        rel8.save()
+        channel.parentChannels.add(channel3)
+        channel.save()
+        channel2.parentChannels.add(channel3)
+        channel2.save()
 
         #act
         score = compute_score_for_channel(channel3)
