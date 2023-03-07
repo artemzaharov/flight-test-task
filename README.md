@@ -56,6 +56,19 @@ Run the following command to generate a report:
 
 
 
+IMPORTANT!!!
+If the application takes a long time to load or requires double-tapping for action:
 
+open docker-compose file
+
+and change:
+
+command: "gunicorn --bind 0.0.0.0:60 service.wsgi
+
+to
+
+command: "python3 manage.py runserver 0.0.0.0:80"
+
+Problem is on the gunicorn side 
 
 
