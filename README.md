@@ -59,6 +59,9 @@ Run the following command to generate a report:
 IMPORTANT!!!
 If the application takes a long time to load or requires double-tapping for action:
 
+
+Problem is on the gunicorn side 
+
 open docker-compose file
 
 and change:
@@ -69,6 +72,13 @@ to
 
 command: "python3 manage.py runserver 0.0.0.0:80"
 
-Problem is on the gunicorn side 
+Then in shell
+
+$ docker-compose build 
+
+Once the build process is complete, run the following command to start the project:
+
+$ docker-compose up
+
 
 
