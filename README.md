@@ -4,11 +4,13 @@ Test task
 To start project
 
  sh build.sh
+ 
  sh run.sh
  
  or 
  
  docker-compose build
+ 
  docker-compose up
  
  python manage.py populate_db 
