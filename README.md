@@ -11,6 +11,8 @@ To start project
  docker-compose build
  docker-compose up
  
+ python manage.py populate_db 
+ 
 A channel must have at least
 one content or one subchannel.
 
